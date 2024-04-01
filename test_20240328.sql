@@ -39,3 +39,34 @@ SELECT * FROM employee
 where hire_date BETWEEN  to_date('1990/01/01', 'RR/MM/DD') 
 and to_date('2001/01/01', 'YY/MM/DD');  --YY라고 스면 2000년대인줄 앎 / RR을 사용하면 1900년대
 --12
+select emp_name from employee where emp_name like '%연';
+--13
+select emp_name, phone from employee where phone not like '010%';
+--14
+select * from employee 
+where email like '____#_%' escape '#' 
+and dept_code in ('D9', 'D6') 
+and hire_date BETWEEN  to_date('1990/01/01', 'RR/MM/DD') 
+and to_date('2000/12/01', 'YY/MM/DD')
+and salary >= 2700000;
+--15
+select emp_name, substr(emp_no, 0,2) "생년", substr(emp_no, 3,2) "생월", substr(emp_no, 4,2) "생일"
+from employee;
+--16
+select emp_name, rpad(substr(emp_no, 0,7) ,13, '*') from employee;
+--17
+select emp_name, trunc ((sysdate - hire_date ) + 1 ) "근무일수1",
+abs(trunc ((hire_date - sysdate ) + 1 ) )"근무일수2"
+from employee;
+--18
+select * from employee where mod(to_number(substr(emp_no, 12,1)),2) != 0;
+--19
+select *
+from employee
+where trunc((( sysdate - hire_date ) + 1 ) / 365 ) > 20;
+--20
+select emp_name, TO_CHAR(SALARY, 'L999,999,999') from employee;
+--21
+
+
+
