@@ -79,6 +79,95 @@ to_number(substr(emp_no, 0,6)) + to_number(substr(emp_no, 8,13)) 합 from employ
 where emp_name = '송종기';
 --24
 select sum((salary + salary*bonus)*12) from employee where dept_code='D5';
---25
+--25. EMPLOYEE테이블에서 직원들의 입사일로부터 년도만 가지고 각 년도별 입사 인원수 조회
+--전체 직원 수, 2001년, 2002년, 2003년, 2004년
+--WHERE, GROUP BY, HAVING은 행을 뽑아내는 식이다.
+SELECT COUNT(*) 전체직원수
+, COUNT(DECODE( EXTRACT(YEAR FROM HIRE_DATE), '2001', 0,NULL)) "2001년"
+, COUNT(DECODE( EXTRACT(YEAR FROM HIRE_DATE), '2002', 0,NULL))  "2002년"
+, COUNT(DECODE( EXTRACT(YEAR FROM HIRE_DATE), '2003', 0,NULL))  "2003년"
+, COUNT(DECODE( EXTRACT(YEAR FROM HIRE_DATE), '2004', 0,NULL))  "2004년"
+FROM EMPLOYEE;
+
+--안에 들어갈 내용 확인
+SELECT COUNT(DECODE( EXTRACT(YEAR FROM HIRE_DATE), '2001', 0,NULL)) FROM EMPLOYEE;
+--둘이 결과 같음
+--그룹함수는 그룹바이에 써야 되기때문에 이게 들어가면 복잡해짐
+SELECT COUNT(*) FROM EMPLOYEE WHERE EXTRACT(YEAR FROM HIRE_DATE) = '2001';
+
+----------추가 문제풀이
+--04_KH
+--8. 한 사원과 같은 부서에서 일하는 사원의 이름 조회
+SELECT T1.EMP_NAME, T1.DEPT_CODE, T2.EMP_NAME
+    FROM EMPLOYEE T1
+        JOIN EMPLOYEE T2 ON (T1.DEPT_CODE = T2.DEPT_CODE) --SELF조인
+    WHERE T1.EMP_NAME <> T2.EMP_NAME 
+    ORDER BY T1.EMP_NAME, T2.EMP_NAME;
+
+--04_KH
+--11. 부서 별 급여 합계가 전체 급여 총 합의 20%보다 많은 부서의 부서 명, 부서 별 급여 합계 조회
+--JOIN, HAVING
+SELECT DEPT_TITLE, SUM(SALARY) 
+    FROM EMPLOYEE E
+        JOIN DEPARTMENT D ON (E.DEPT_CODE = D.DEPT_ID)
+    GROUP BY DEPT_TITLE
+    HAVING SUM(SALARY) > ANY(SELECT SUM(SALARY)*0.2 FROM EMPLOYEE)
+    ORDER BY DEPT_TITLE;
+--인라인 뷰
+SELECT DEPT_TITLE, SUMSAL  FROM(
+    SELECT DEPT_TITLE, SUM(SALARY) SUMSAL
+    FROM EMPLOYEE E
+        JOIN DEPARTMENT D ON (E.DEPT_CODE = D.DEPT_ID) 
+             GROUP BY DEPT_TITLE)
+             HAVING SUM(SALARY) > ANY(SELECT SUM(SALARY)*0.2 FROM EMPLOYEE)
+             ORDER BY DEPT_TITLE;
+
+--WITH 사용
+
+select dept_title , sum(salary)
+    from employee e
+        join department d on (e.dept_code=d.dept_id)
+    group by dept_title
+    having sum(salary) > any( select sum(salary)*0.2 from employee) 
+;
+select dept_title , sum(salary)
+    from ( select dept_title, salary from employee e join department d on (e.dept_code=d.dept_id)) t1
+    group by dept_title
+    having sum(salary) > any( select sum(salary)*0.2 from employee) 
+;
+select dept_title , sum_sal
+    from ( select dept_title, sum(salary) sum_sal
+            from employee e join department d on (e.dept_code=d.dept_id)
+            group by dept_title
+        ) t1
+    where sum_sal > any( select sum(salary)*0.2 from employee) 
+;
+with t1 as ( select dept_title, sum(salary) sum_sal
+                from employee e join department d on (e.dept_code=d.dept_id)
+                group by dept_title
+            ) 
+select dept_title, sum_sal from t1 where sum_sal > any( select sum(salary)*0.2 from employee)
+;
+
+
+--05_실습_SQL02_SELECT(Function)
+--15.학번이 A112113 인 김고은 학생의 년도, 학기 별 평점과 년도 별 누적 평점, 총     평점을 SQL 문을 작성하시오.(단, 평점은 소수점 1 자리까지만 반올림하여 표시한다.)
+--ROLLUP, CUBE, GROUPING 고려
+SELECT
+    nvl((substr(term_no, 1, 4)), ' ')              년도,
+    nvl((substr(term_no, 5, 2)), ' ')              학기,
+    round(AVG(point), 1)                           avg_point
+FROM
+    tb_grade
+WHERE
+    student_no = 'A112113'
+GROUP BY
+    ROLLUP((substr(term_no, 1, 4)),
+           (substr(term_no, 5, 2)))
+ORDER BY NULL;
+    
+
+SELECT * FROM TB_STUDENT WHERE STUDENT_NO = 'A112113';
+
 
 
